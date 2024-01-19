@@ -21,6 +21,20 @@ namespace NeonServer.Controllers
             _driver = GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
         }
 
+        [HttpPost(Name = "AddTrack")]
+        public async Task Post(Song songInfo, string artistName)
+        {
+            if (songInfo == null || artistName == "")
+            {
+                return;
+            }
+            else
+            {
+                using var session = _driver.AsyncSession();
+                await session.ExecuteWriteAsync(async tx => (await tx.RunAsync("MERGE (a:Artist {name: $artist}) MERGE (s:Song {title: $title, album: $album, genre: $genre, mood: $mood}) MERGE (a)-[:PRODUCED]->(s)", new { title = songInfo.Title, mood = songInfo.Mood, genre = songInfo.Genre, album = songInfo.Album, artist = artistName })));
+            }
+        }
+
         [HttpGet(Name = "GetSongRecs")]
         public async Task<IEnumerable<Song>> Get(string startSong)
         {
